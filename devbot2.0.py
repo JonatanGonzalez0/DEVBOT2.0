@@ -11,8 +11,6 @@ bot = discord.Bot(intents=intents)
 TOKEN = 'MTA4NDY4Mjc2MzIyNTAwNjE3Mg.GyCxjB.T3KMYpLwvhibWWCAjhl-NTT90dzwP4gPHz8bqo'
 
 # On Ready Event
-
-
 @bot.event
 async def on_ready():
     activity = discord.Game(name="/login")
@@ -493,7 +491,7 @@ async def homebase(ctx, homebase):
 
 # ghost equip command
 @bot.slash_command(name="ghost-equip", description="Ghost equip")
-async def ghostequip(ctx, skin: discord.Option(str, description="Skin", required=True)):
+async def ghostequip(ctx, skin: discord.Option(str, description="Skin", required=True)): # type: ignore
     await ctx.defer()
     account_Check = await user_data.find_one({"UserId": ctx.author.id})
 
