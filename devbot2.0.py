@@ -1,22 +1,16 @@
-from discord.ext.pages import Paginator, Page
+from discord.ext.pages import Paginator
 import aiohttp
 import discord
-import asyncio
 import requests
 import json
-import motor
 from motor.motor_asyncio import AsyncIOMotorClient
-from discord.ext import commands
-from discord.commands import Option
-from discord import Intents
 
-
+# Bot Setup
 intents = discord.Intents.all()
-
-
 bot = discord.Bot(intents=intents)
-
 TOKEN = 'MTA4NDY4Mjc2MzIyNTAwNjE3Mg.GyCxjB.T3KMYpLwvhibWWCAjhl-NTT90dzwP4gPHz8bqo'
+
+# On Ready Event
 
 
 @bot.event
@@ -25,14 +19,14 @@ async def on_ready():
     await bot.change_presence(status=discord.Status.online, activity=activity)
     print("Bot is online!")
 
-
-DATABASE_CLUSTER = AsyncIOMotorClient("mongodb+srv://3005959480101:Ne59481739@cluster0.7a4ekcc.mongodb.net/?retryWrites=true&w=majority")
+# Mongo DB Connection
+DATABASE_CLUSTER = AsyncIOMotorClient(
+    "mongodb+srv://3005959480101:Ne59481739@cluster0.7a4ekcc.mongodb.net/?retryWrites=true&w=majority")
 db = DATABASE_CLUSTER["Cluster0"]
 user_data = db["USER_DATA"]
 
 
 # UTILS
-
 async def FetchAvatarUser(user_id):
     Account_Check = await user_data.find_one({"UserId": user_id})
 
@@ -91,9 +85,7 @@ YouCannotDoThis = discord.Embed(
 YouAreNotWhitelisted = discord.Embed(
     title="ACCESS DENIED ❌", description="**You Are NOT Whitelisted**")
 
-# Reload
-
-
+# Reload Command
 @bot.slash_command(name="reload", description="Reloads all  commands.")
 async def reload(ctx):
     if ctx.author.id == 397047956643119135:
@@ -110,9 +102,7 @@ async def reload(ctx):
     else:
         await ctx.respond("You are not a dev.", ephemeral=True)
 
-# Login
-
-
+# Login Command
 class Login(discord.ui.Modal):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -195,8 +185,6 @@ async def login(ctx):
 
 
 # Logout Command
-
-
 @bot.slash_command(description="Log out of your fortnite account.")
 async def logout(ctx):
     Data_Check = await user_data.find_one({"UserId": ctx.author.id})
@@ -208,9 +196,7 @@ async def logout(ctx):
             title="Logged Out.", description="You are now logged out!", colour=discord.Colour.green())
         await ctx.respond(embed=embed)
 
-# Dupe
-
-
+# Dupe Normal Command
 @bot.slash_command(name="dupe", description="Enables the dupe.")
 async def add_dupe(ctx):
     try:
@@ -271,8 +257,6 @@ async def add_dupe(ctx):
         await ctx.respond(embed=UnknownError)
 
 # Clear Friends
-
-
 @bot.slash_command(name="clear-friends", description="Clears all friends.")
 async def clear_friends(ctx):
 
@@ -303,7 +287,6 @@ async def clear_friends(ctx):
 
 
 # Show Current Account
-
 @bot.slash_command(description="View account.")
 async def who(ctx):
     await ctx.defer()
@@ -324,9 +307,7 @@ async def who(ctx):
         embed.set_thumbnail(url=avatar)
         await ctx.respond(embed=embed)
 
-# Ventures
-
-
+# Ventures Dupe Command
 @bot.slash_command(name="vdupe", description="Enables the venture dupe.")
 async def vdupe(ctx):
     try:
@@ -380,10 +361,7 @@ async def vdupe(ctx):
         await ctx.respond(embed=UnknownError)
 
 # Help
-
-
 premiums = ['dupe']
-
 
 def CheckPremiumcommand(command):
     if command in premiums:
@@ -391,7 +369,7 @@ def CheckPremiumcommand(command):
     else:
         return False
 
-
+# Help Command
 @bot.slash_command(description="Shows all Commands the bot has to offer")
 async def help(ctx):
 
@@ -426,8 +404,7 @@ async def help(ctx):
     await paginator.respond(ctx.interaction)
 
 
-# Leave
-
+# Leave Party
 @bot.slash_command(description="Leave the fortnite party.")
 async def leave(ctx):
     await ctx.defer()
@@ -462,9 +439,7 @@ async def leave(ctx):
                 title="Success", description=f"You have left the fortnite party.", color=discord.Color.green())
             await ctx.respond(embed=embed)
 
-# homebase
-
-
+# homebase command
 @bot.slash_command(description="Change your homebase name.")
 async def homebase(ctx, homebase):
     await ctx.defer()
@@ -516,7 +491,7 @@ async def homebase(ctx, homebase):
             embed.set_author(name=display_name, icon_url=avatar)
             await ctx.respond(embed=embed)
 
-
+# ghost equip command
 @bot.slash_command(name="ghost-equip", description="Ghost equip")
 async def ghostequip(ctx, skin: discord.Option(str, description="Skin", required=True)):
     await ctx.defer()
@@ -629,7 +604,7 @@ async def ghostequip(ctx, skin: discord.Option(str, description="Skin", required
                                             url=f'https://fortnite-api.com/images/cosmetics/br/{id_item}/icon.png')
                                         await ctx.respond(embed=embed)
 
-
+#hello world command
 @bot.slash_command(description="hello world")
 async def hello_world(ctx):
     Data_Check = await user_data.find_one({"UserId": ctx.author.id})
