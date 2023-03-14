@@ -9,6 +9,12 @@ from motor.motor_asyncio import AsyncIOMotorClient
 intents = discord.Intents.all()
 bot = discord.Bot(intents=intents)
 TOKEN = 'MTA4NDY4Mjc2MzIyNTAwNjE3Mg.GyCxjB.T3KMYpLwvhibWWCAjhl-NTT90dzwP4gPHz8bqo'
+# Mongo DB Connection
+DATABASE_CLUSTER = AsyncIOMotorClient(
+    "mongodb+srv://3005959480101:Ne59481739@cluster0.7a4ekcc.mongodb.net/?retryWrites=true&w=majority")
+db = DATABASE_CLUSTER["Cluster0"]
+user_data = db["USER_DATA"]
+
 
 # On Ready Event
 @bot.event
@@ -17,14 +23,9 @@ async def on_ready():
     await bot.change_presence(status=discord.Status.online, activity=activity)
     print("Bot is online!")
 
-# Mongo DB Connection
-DATABASE_CLUSTER = AsyncIOMotorClient(
-    "mongodb+srv://3005959480101:Ne59481739@cluster0.7a4ekcc.mongodb.net/?retryWrites=true&w=majority")
-db = DATABASE_CLUSTER["Cluster0"]
-user_data = db["USER_DATA"]
-
-
 # UTILS
+
+
 async def FetchAvatarUser(user_id):
     Account_Check = await user_data.find_one({"UserId": user_id})
 
@@ -75,7 +76,7 @@ async def UpdateInfoAccount(user_id):
 # Embed Error(s)
 
 UnknownError = discord.Embed(title=f"Authorization Error ❌",
-                             description="GORB0 needs a new authorization code. Logout and log back in with a new auth.", colour=discord.Colour.brand_red())
+                             description="SaveBot needs a new authorization code. Logout and log back in with a new auth.", colour=discord.Colour.brand_red())
 NotLoggedIn = discord.Embed(
     description="**`❌ Not Logged In, Try /login ❌`**", colour=discord.Colour.red())
 YouCannotDoThis = discord.Embed(
@@ -84,6 +85,8 @@ YouAreNotWhitelisted = discord.Embed(
     title="ACCESS DENIED ❌", description="**You Are NOT Whitelisted**")
 
 # Reload Command
+
+
 @bot.slash_command(name="reload", description="Reloads all  commands.")
 async def reload(ctx):
     if ctx.author.id == 397047956643119135:
@@ -101,6 +104,8 @@ async def reload(ctx):
         await ctx.respond("You are not a dev.", ephemeral=True)
 
 # Login Command
+
+
 class Login(discord.ui.Modal):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -171,6 +176,14 @@ class LoginGUI(discord.ui.View):  # Create a class called MyView that subclasses
 
 @bot.slash_command(description="Login to your fortnite account.")
 async def login(ctx):
+    if ctx.guild_id != 1037174423050010785:
+        await ctx.respond("Debes estar en https://discord.gg/78cJC8gCFR para poder usar este bot")
+        return
+        
+    if ctx.channel_id != 1084693761549934613:
+        await ctx.respond("Debes usar el canal <#1084693761549934613> para poder usar este bot")
+        return
+    
     GUI = LoginGUI()
     Add_Component = GUI.add_item(discord.ui.Button(label="Authorization Code", style=discord.ButtonStyle.link,
                                  url="https://www.epicgames.com/id/api/redirect?clientId=3446cd72694c4a4485d81b77adbb2141&responseType=code"))
@@ -195,6 +208,8 @@ async def logout(ctx):
         await ctx.respond(embed=embed)
 
 # Dupe Normal Command
+
+
 @bot.slash_command(name="dupe", description="Enables the dupe.")
 async def add_dupe(ctx):
     try:
@@ -255,6 +270,8 @@ async def add_dupe(ctx):
         await ctx.respond(embed=UnknownError)
 
 # Clear Friends
+
+
 @bot.slash_command(name="clear-friends", description="Clears all friends.")
 async def clear_friends(ctx):
 
@@ -306,6 +323,8 @@ async def who(ctx):
         await ctx.respond(embed=embed)
 
 # Ventures Dupe Command
+
+
 @bot.slash_command(name="vdupe", description="Enables the venture dupe.")
 async def vdupe(ctx):
     try:
@@ -361,6 +380,7 @@ async def vdupe(ctx):
 # Help
 premiums = ['dupe']
 
+
 def CheckPremiumcommand(command):
     if command in premiums:
         return True
@@ -368,6 +388,7 @@ def CheckPremiumcommand(command):
         return False
 
 # Help Command
+'''
 @bot.slash_command(description="Shows all Commands the bot has to offer")
 async def help(ctx):
 
@@ -391,7 +412,7 @@ async def help(ctx):
             embed = discord.Embed(
                 description=f"**Commands • {len(commmands)}\nCommands Premium • {len(premiums)}**\n\n• :star:- Premium Command", color=discord.Color.blue())
             embed.set_author(
-                name='Gorb0 Help page', icon_url='https://cdn.discordapp.com/avatars/1040081249345212447/a8abbd6c9e26ac46810899bd49d37fc5.webp')
+                name='SaveBot Help page', icon_url='https://cdn.discordapp.com/avatars/1040081249345212447/a8abbd6c9e26ac46810899bd49d37fc5.webp')
             embed.set_thumbnail(
                 url="https://cdn.discordapp.com/avatars/1040081249345212447/a8abbd6c9e26ac46810899bd49d37fc5.webp")
             embed.add_field(name="Commands", value=description)
@@ -400,7 +421,7 @@ async def help(ctx):
 
     paginator = Paginator(pages=pages)
     await paginator.respond(ctx.interaction)
-
+'''
 
 # Leave Party
 @bot.slash_command(description="Leave the fortnite party.")
@@ -438,6 +459,8 @@ async def leave(ctx):
             await ctx.respond(embed=embed)
 
 # homebase command
+
+
 @bot.slash_command(description="Change your homebase name.")
 async def homebase(ctx, homebase):
     await ctx.defer()
@@ -490,8 +513,10 @@ async def homebase(ctx, homebase):
             await ctx.respond(embed=embed)
 
 # ghost equip command
+
+
 @bot.slash_command(name="ghost-equip", description="Ghost equip")
-async def ghostequip(ctx, skin: discord.Option(str, description="Skin", required=True)): # type: ignore
+async def ghostequip(ctx, skin: discord.Option(str, description="Skin", required=True)):  # type: ignore
     await ctx.defer()
     account_Check = await user_data.find_one({"UserId": ctx.author.id})
 
@@ -602,7 +627,9 @@ async def ghostequip(ctx, skin: discord.Option(str, description="Skin", required
                                             url=f'https://fortnite-api.com/images/cosmetics/br/{id_item}/icon.png')
                                         await ctx.respond(embed=embed)
 
-#hello world command
+# hello world command
+
+
 @bot.slash_command(description="hello world")
 async def hello_world(ctx):
     Data_Check = await user_data.find_one({"UserId": ctx.author.id})
