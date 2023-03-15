@@ -1,4 +1,5 @@
-from discord.ext.pages import Paginator
+import asyncio
+import os
 import aiohttp
 import discord
 import requests
@@ -16,6 +17,7 @@ db = DATABASE_CLUSTER["Cluster0"]
 user_data = db["USER_DATA"]
 
 
+
 # On Ready Event
 @bot.event
 async def on_ready():
@@ -23,6 +25,20 @@ async def on_ready():
     await bot.change_presence(status=discord.Status.online, activity=activity)
     print("Bot is online!")
 
+    while True:
+        await asyncio.sleep(10)
+        #crear un archivo de texto que se llame key.txt si no existe y si existe lo borra
+
+        with open("key.txt", "w") as f:
+            f.write("Key is here")
+        print("bot is alive")
+        await asyncio.sleep(10)
+        #delete file key.txt
+        if os.path.exists("key.txt"):
+            os.remove("key.txt")
+        else:
+            print("The file does not exist")
+            
 # UTILS
 
 
@@ -420,7 +436,7 @@ async def help(ctx):
             description = ""
 
     paginator = Paginator(pages=pages)
-    await paginator.respond(ctx.interaction)
+    await paginator.respond(ctx.interaction)user_data
 '''
 
 # Leave Party
