@@ -26,19 +26,20 @@ async def on_ready():
     print("Bot is online!")
 
     while True:
-        await asyncio.sleep(10)
+        await asyncio.sleep(60)
+        print("bot is alive")
         #crear un archivo de texto que se llame key.txt si no existe y si existe lo borra
-
+        '''
         with open("key.txt", "w") as f:
             f.write("Key is here")
-        print("bot is alive")
+        
         await asyncio.sleep(10)
         #delete file key.txt
         if os.path.exists("key.txt"):
             os.remove("key.txt")
         else:
             print("The file does not exist")
-            
+        '''    
 # UTILS
 
 
