@@ -17,7 +17,6 @@ db = DATABASE_CLUSTER["Cluster0"]
 user_data = db["USER_DATA"]
 
 
-
 # On Ready Event
 @bot.event
 async def on_ready():
@@ -28,7 +27,7 @@ async def on_ready():
     while True:
         await asyncio.sleep(60)
         print("bot is alive")
-        #crear un archivo de texto que se llame key.txt si no existe y si existe lo borra
+        # crear un archivo de texto que se llame key.txt si no existe y si existe lo borra
         '''
         with open("key.txt", "w") as f:
             f.write("Key is here")
@@ -39,7 +38,7 @@ async def on_ready():
             os.remove("key.txt")
         else:
             print("The file does not exist")
-        '''    
+        '''
 # UTILS
 
 
@@ -196,11 +195,11 @@ async def login(ctx):
     if ctx.guild_id != 1037174423050010785:
         await ctx.respond("Debes estar en https://discord.gg/78cJC8gCFR para poder usar este bot")
         return
-        
+
     if ctx.channel_id != 1084693761549934613:
         await ctx.respond("Debes usar el canal <#1084693761549934613> para poder usar este bot")
         return
-    
+
     GUI = LoginGUI()
     Add_Component = GUI.add_item(discord.ui.Button(label="Authorization Code", style=discord.ButtonStyle.link,
                                  url="https://www.epicgames.com/id/api/redirect?clientId=3446cd72694c4a4485d81b77adbb2141&responseType=code"))
@@ -229,6 +228,7 @@ async def logout(ctx):
 
 @bot.slash_command(name="dupe", description="Enables the dupe.")
 async def add_dupe(ctx):
+
     try:
         await ctx.defer()
 
@@ -240,49 +240,78 @@ async def add_dupe(ctx):
         else:
             await UpdateInfoAccount(ctx.author.id)
 
-            items_dupe = []
+            # Mostrar ventana de advertencia
+            embed = discord.Embed(
+                title="⚠️ Please Read the Following Before Making the Decision to Enable the Dupe on Your Account ⚠️",
+                description="It is not my fault if you mess up your account because you didn't read this.\n\n**Normal Dupe (/dupe)**\n\n- Disables STW Builds FOREVER\n- Freezes All Progress (Inventory/Storage + Quests)\n- Cannot Change Inventory After Enabled\n\n(ALTS ARE ALWAYS RECOMMENDED)\n\nREMEMBER TO FILL INVENTORY AND STORAGE BEFORE ENABLING ⚠️",
+                color=discord.Color.red()
+            )
 
-            token_ref = Account_Check['AccessToken']
-            accountid = Account_Check['AccountId']
-            headers = {
-                "Content-Type": f"application/json",
-                "Authorization": f"Bearer {token_ref}"
-            }
+            agree_button = discord.Button(
+                style=discord.ButtonStyle.green, label="I Agree", emoji="✅", custom_id="dupe_agree")
+            cancel_button = discord.Button(
+                style=discord.ButtonStyle.red, label="Cancel", emoji="❌", custom_id="dupe_cancel")
+            action_row = discord.ActionRow(agree_button, cancel_button)
 
-            data = json.dumps({})
+            message = await ctx.respond(embed=embed, components=[action_row])
 
             try:
-                request = requests.post(f"https://fortnite-public-service-prod11.ol.epicgames.com/fortnite/api/game/v2/profile/" +
-                                        accountid + "/client/QueryProfile?profileId=theater0&rvn=-1", headers=headers, data=data)
+                interaction = await bot.wait_for(
+                    "button_click",
+                    check=lambda i: i.custom_id in [
+                        "dupe_agree", "dupe_cancel"] and i.user.id == ctx.author.id,
+                    timeout=60.0
+                )
+                if interaction.custom_id == "dupe_agree":
+                    items_dupe = []
 
-                res = request.json()
+                    token_ref = Account_Check['AccessToken']
+                    accountid = Account_Check['AccountId']
+                    headers = {
+                        "Content-Type": f"application/json",
+                        "Authorization": f"Bearer {token_ref}"
+                    }
 
-                stuff = res['profileChanges'][0]['profile']['items']
+                    data = json.dumps({})
 
-                for i in stuff:
-                    if "building" in stuff[i]['templateId']:
-                        items_dupe.append(i)
+                    try:
+                        request = requests.post(f"https://fortnite-public-service-prod11.ol.epicgames.com/fortnite/api/game/v2/profile/" +
+                                                accountid + "/client/QueryProfile?profileId=theater0&rvn=-1", headers=headers, data=data)
 
-                if items_dupe == []:
-                    embed = discord.Embed(
-                        title="Error", description="Dupe is Already ACTIVE", colour=discord.Colour.red())
-                    await ctx.respond(embed=embed)
+                        res = request.json()
+
+                        stuff = res['profileChanges'][0]['profile']['items']
+
+                        for i in stuff:
+                            if "building" in stuff[i]['templateId']:
+                                items_dupe.append(i)
+
+                        if items_dupe == []:
+                            embed = discord.Embed(
+                                title="Error", description="Dupe is Already ACTIVE", colour=discord.Colour.red())
+                            await ctx.respond(embed=embed)
+                        else:
+
+                            body = json.dumps({"itemIds": [i]})
+                            requests.post(f"https://fortnite-public-service-prod11.ol.epicgames.com/fortnite/api/game/v2/profile/" +
+                                          accountid + "/client/DestroyWorldItems?profileId=theater0&rvn=-1", headers=headers, data=body)
+
+                            avatar = await FetchAvatarUser(ctx.author.id)
+
+                            embed = discord.Embed(
+                                title="Successful!", description=f"This is **IRREVERSIBLE** and the owner can do NOTHING about it.\n\n**`{Account_Check['DisplayName']}`**", colour=discord.Color.green())
+                            embed.set_thumbnail(url=avatar)
+                            await ctx.respond(embed=embed)
+                            items_dupe.clear()
+
+                    except:
+                        await ctx.respond(embed=UnknownError)
                 else:
+                    await message.edit(embed=discord.Embed(title="Cancelled", description="You cancelled the command dupe.", color=discord.Color.red()), components=[])
+            except asyncio.TimeoutError:
+                await message.edit(embed=discord.Embed(title="Timed Out", description="You took too long to respond.", color=discord.Color.red()), components=[])
+                return
 
-                    body = json.dumps({"itemIds": [i]})
-                    requests.post(f"https://fortnite-public-service-prod11.ol.epicgames.com/fortnite/api/game/v2/profile/" +
-                                  accountid + "/client/DestroyWorldItems?profileId=theater0&rvn=-1", headers=headers, data=body)
-
-                    avatar = await FetchAvatarUser(ctx.author.id)
-
-                    embed = discord.Embed(
-                        title="Successful!", description=f"This is **IRREVERSIBLE** and the owner can do NOTHING about it.\n\n**`{Account_Check['DisplayName']}`**", colour=discord.Color.green())
-                    embed.set_thumbnail(url=avatar)
-                    await ctx.respond(embed=embed)
-                    items_dupe.clear()
-
-            except:
-                await ctx.respond(embed=UnknownError)
     except:
         await ctx.respond(embed=UnknownError)
 
@@ -355,42 +384,70 @@ async def vdupe(ctx):
 
             await UpdateInfoAccount(ctx.author.id)
 
-            items_dupeventure = []
+            # Mostrar ventana de advertencia
+            embed = discord.Embed(
+                title="⚠️ Please Read the Following Before Making the Decision to Enable the Dupe on Your Account ⚠️",
+                description="It is not my fault if you mess up your account because you didn't read this.\n\n**Ventures Dupe (/vdupe)**\n\n- Disables Only Venture Builds\n- Freezes Venture Inventory\n\n(ALTS ARE ALWAYS RECOMMENDED)\n\nREMEMBER TO FILL INVENTORY AND STORAGE BEFORE ENABLING ⚠️",
+                color=discord.Color.red()
+            )
 
-            token_ref = Account_Check['AccessToken']
-            accountid = Account_Check['AccountId']
-            headers = {
-                "Content-Type": f"application/json",
-                "Authorization": f"Bearer {token_ref}"
-            }
-            data = json.dumps({})
+            agree_button = discord.Button(
+                style=discord.ButtonStyle.green, label="I Agree", emoji="✅", custom_id="dupe_agree")
+            cancel_button = discord.Button(
+                style=discord.ButtonStyle.red, label="Cancel", emoji="❌", custom_id="dupe_cancel")
+            action_row = discord.ActionRow(agree_button, cancel_button)
+
+            message = await ctx.respond(embed=embed, components=[action_row])
 
             try:
-                request = requests.post(f"https://fortnite-public-service-prod11.ol.epicgames.com/fortnite/api/game/v2/profile/" +
-                                        accountid + "/client/QueryProfile?profileId=theater2&rvn=-1", headers=headers, data=data)
-                res = request.json()
+                interaction = await bot.wait_for(
+                    "button_click",
+                    check=lambda i: i.custom_id in [
+                        "dupe_agree", "dupe_cancel"] and i.user.id == ctx.author.id,
+                    timeout=60.0
+                )
+                if interaction.custom_id == "dupe_agree":
+                    items_dupeventure = []
 
-                stuff = res['profileChanges'][0]['profile']['items']
+                    token_ref = Account_Check['AccessToken']
+                    accountid = Account_Check['AccountId']
+                    headers = {
+                        "Content-Type": f"application/json",
+                        "Authorization": f"Bearer {token_ref}"
+                    }
+                    data = json.dumps({})
 
-                for i in stuff:
-                    if "building" in stuff[i]['templateId']:
-                        items_dupeventure.append(i)
+                    try:
+                        request = requests.post(f"https://fortnite-public-service-prod11.ol.epicgames.com/fortnite/api/game/v2/profile/" +
+                                                accountid + "/client/QueryProfile?profileId=theater2&rvn=-1", headers=headers, data=data)
+                        res = request.json()
 
-                if items_dupeventure == []:
-                    embed = discord.Embed(
-                        title="Error", description="Dupe is Already ACTIVE", colour=discord.Colour.red())
-                    await ctx.respond(embed=embed)
-                else:
-                    body = json.dumps({"itemIds": [items_dupeventure]})
+                        stuff = res['profileChanges'][0]['profile']['items']
 
-                    venturedestroyreq = requests.post(f"https://fortnite-public-service-prod11.ol.epicgames.com/fortnite/api/game/v2/profile/" +
-                                                      accountid + "/client/DestroyWorldItems?profileId=theater2&rvn=-1", headers=headers, data=body)
-                    embed = discord.Embed(title="Successfully Enabled Ventures Dupe!",
-                                          description=f"This is **IRREVERSIBLE** and the owner can do NOTHING about it.\n\n**`{Account_Check['DisplayName']}`**", colour=discord.Color.green())
-                    await ctx.respond(embed=embed)
-                    items_dupeventure.clear()
-            except:
-                await ctx.respond(embed=UnknownError)
+                        for i in stuff:
+                            if "building" in stuff[i]['templateId']:
+                                items_dupeventure.append(i)
+
+                        if items_dupeventure == []:
+                            embed = discord.Embed(
+                                title="Error", description="Dupe is Already ACTIVE", colour=discord.Colour.red())
+                            await ctx.respond(embed=embed)
+                        else:
+                            body = json.dumps({"itemIds": [items_dupeventure]})
+
+                            venturedestroyreq = requests.post(f"https://fortnite-public-service-prod11.ol.epicgames.com/fortnite/api/game/v2/profile/" +
+                                                            accountid + "/client/DestroyWorldItems?profileId=theater2&rvn=-1", headers=headers, data=body)
+                            embed = discord.Embed(title="Successfully Enabled Ventures Dupe!",
+                                                description=f"This is **IRREVERSIBLE** and the owner can do NOTHING about it.\n\n**`{Account_Check['DisplayName']}`**", colour=discord.Color.green())
+                            await ctx.respond(embed=embed)
+                            items_dupeventure.clear()
+                    except:
+                        await ctx.respond(embed=UnknownError)
+            except asyncio.TimeoutError:
+                await message.edit(embed=discord.Embed(title="Timed Out", description="You took too long to respond.", color=discord.Color.red()), components=[])
+                return
+
+            
     except:
         await ctx.respond(embed=UnknownError)
 
@@ -403,6 +460,7 @@ def CheckPremiumcommand(command):
         return True
     else:
         return False
+
 
 # Help Command
 '''
@@ -441,6 +499,8 @@ async def help(ctx):
 '''
 
 # Leave Party
+
+
 @bot.slash_command(description="Leave the fortnite party.")
 async def leave(ctx):
     await ctx.defer()
